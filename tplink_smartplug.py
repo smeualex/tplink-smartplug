@@ -24,6 +24,7 @@ import json
 import time
 import socket
 import argparse
+import datetime
 from struct import pack
 
 from prometheus_client import CollectorRegistry, Gauge, Summary, start_http_server
@@ -81,7 +82,9 @@ commands = {        'info'     : '{"system":{"get_sysinfo":{}}}',
             'antitheft': '{"anti_theft":{"get_rules":{}}}',
             'reboot'   : '{"system":{"reboot":{"delay":1}}}',
             'reset'    : '{"system":{"reset":{"delay":1}}}',
-            'energy'   : '{"emeter":{"get_realtime":{}}}'
+            'energy'   : '{"emeter":{"get_realtime":{}}}',
+            'stats_month': '{"emeter":{""get_monthstat":{"year":YYYY}}}',
+            'stats_day': '{"emeter":{"get_daystat":{"month":MMMM,"year":YYYY}}}'
 }
 
 # Encryption and Decryption of TP-Link Smart Home Protocol
@@ -148,6 +151,21 @@ def getData(ip, port, timeout, cmd):
     except socket.error:
         quit("Could not connect to host " + ip + ":" + str(port))
 
+def setUpCmdParams():
+    """
+    Set up parameters in commands:
+        'stats_month': '{"emeter":{""get_monthstat":{"year":XXXXXXXX}}}' 
+            - year will have current year
+    """
+    # set the current year
+    currentYear = str(datetime.datetime.now().year)
+    commands['stats_month'].replace("YYYY", currentYear)
+
+    #set the current month and year
+    currentMonth = str(datetime.datetime.now().month)
+    commands['stats_day'].replace("YYYY", currentYear)
+    commands['stats_day'].replace("MMMM", currentMonth)
+
 def main():
     # Parse commandline arguments
     parser = argparse.ArgumentParser(description="TP-Link Wi-Fi Smart Plug Client v" + str(version))
@@ -180,3 +198,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
