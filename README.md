@@ -1,5 +1,10 @@
 # TP-Link WiFi SmartPlug Client and Wireshark Dissector
 
+## Project forked form [here](https://github.com/softScheck/tplink-smartplug)
+Used as a base for exporting the HS110 data to Prometheus.
+
+
+## Original readme
 For the full story, see [Reverse Engineering the TP-Link HS110](https://www.softscheck.com/en/reverse-engineering-tp-link-hs110/)
 
 ## tplink_smartplug.py ##
