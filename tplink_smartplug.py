@@ -20,12 +20,31 @@
 #
 
 import sys
+import json
+import time
 import socket
 import argparse
 from struct import pack
 
-version = 0.3
+from prometheus_client import CollectorRegistry, Gauge, Summary, start_http_server
 
+PROMETHEUS_EXPORT_PORT=9130
+voltageGauge     = Gauge('tplink_voltage_mv',    'Voltage, Volts')
+currentGauge     = Gauge('tplink_current_ma',    'Current, Amps' )
+powerGauge       = Gauge('tplink_power_mw',      'Power, Watts'  )
+totalWattsSum    = Gauge('tplink_total_power_wh', 'TotalPower, KiloWattHour')
+
+version = 0.4
+
+def exportPowerInfoToPrometheus(data):
+    try:
+        jsonData = json.loads(data)
+        voltageGauge.set      (jsonData["emeter"]["get_realtime"]["voltage_mv"] / 1000);
+        currentGauge.set      (jsonData["emeter"]["get_realtime"]["current_ma"] / 1000);
+        powerGauge.set        (jsonData["emeter"]["get_realtime"]["power_mw"  ] / 1000);
+        totalWattsSum.set     (jsonData["emeter"]["get_realtime"]["total_wh"  ] / 1000);
+    except json.JSONDecodeError as err:
+        print ("[tplink_smartplug] - JSON Decode Error: ", err)
 # Check if hostname is valid
 def validHostname(hostname):
     try:
@@ -124,6 +143,8 @@ def getData(ip, port, timeout, cmd):
         print("Sent:     ", cmd)
         print("Received: ", decrypted)
 
+        return decrypted
+
     except socket.error:
         quit("Could not connect to host " + ip + ":" + str(port))
 
@@ -148,7 +169,14 @@ def main():
     else:
         cmd = commands[args.command]
 
-    getData(ip, port, args.timeout, cmd)    
+    ###############################################################################################
+    # start http server
+    start_http_server(PROMETHEUS_EXPORT_PORT)
+
+    while(True):
+        tplinkData = getData(ip, port, args.timeout, cmd)
+        exportPowerInfoToPrometheus(tplinkData)
+        time.sleep(5.0)
 
 if __name__ == '__main__':
     main()
