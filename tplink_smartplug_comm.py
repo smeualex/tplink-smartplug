@@ -112,7 +112,7 @@ else:
             result += chr(a)
         return result
 
-def getData(ip, port, timeout, commandName):
+def getData(commandName, ip, port, timeout):
     # Send command and receive reply
     try:
         cmd = commands[commandName]
@@ -147,21 +147,8 @@ def setUpCmdParams():
     commands['stats_day'] = commands['stats_day'].replace("YYYY", currentYear)
     commands['stats_day'] = commands['stats_day'].replace("MMMM", currentMonth)
 
-def sendCommand(cmd):
-    TPLINK_SMARTPLUG_IP   = "192.168.0.151"
-    TPLINK_SMARTPLUG_PORT = 9999
-    REQ_TIMEOUT           = 10
-
+def sendCommand(cmd, ip, port, timeout):
     setUpCmdParams()
-    tplinkData = getData(TPLINK_SMARTPLUG_IP, TPLINK_SMARTPLUG_PORT, REQ_TIMEOUT, cmd)
+    tplinkData = getData(cmd, ip, port, timeout)
 
     return tplinkData
-
-def main():
-    sendCommand("energy")
-    sendCommand("stats_day")
-    sendCommand("info")
-
-if __name__ == '__main__':
-    main()
-
